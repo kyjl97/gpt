@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex 安装全指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+                        dark: { bg: '#09090b', card: '#18181b', border: '#27272a' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'PingFang SC', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-nav { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .inset-shadow { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05); }
+        .dark .inset-shadow { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+    </style>
+</head>
+<body x-data="{ darkMode: true, activeTab: 'cmd' }"
+      :class="darkMode ? 'dark bg-dark-bg text-zinc-100' : 'bg-slate-50 text-zinc-900'"
+      class="antialiased transition-colors duration-300">
+
+    <!-- 访问密码拦截层 -->
+    <div id="passwordOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/95 backdrop-blur-md hidden">
+        <div class="w-full max-w-md p-8 rounded-3xl bg-[#111214] border border-zinc-200 dark:border-zinc-800 text-center shadow-2xl not-italic">
+            <!-- 统一顶部标题 -->
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <span class="text-xl">🔐</span>
+                <span class="text-xl font-bold text-white tracking-wide">访问验证</span>
+            </div>
+
+            <!-- 步骤 1：密码验证主界面 -->
+            <div id="passwordStep1" class="space-y-6">
+                <p class="text-xs text-zinc-400 font-medium">请输入密码以访问</p>
+
+                <div class="flex items-center gap-3">
+                    <input type="password" id="passwordInput" placeholder="请输入密码" class="flex-1 h-11 px-4 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#10b981] transition-colors">
+                    <button onclick="verifyPassword()" class="h-11 px-6 bg-[#10b981] hover:bg-[#059669] text-white text-sm font-bold rounded-xl shadow-md transition-colors shrink-0 flex items-center justify-center">验证</button>
+                </div>
+
+                <div class="flex justify-center pt-2">
+                    <button onclick="switchStep(2)" class="flex items-center justify-center gap-1.5 h-11 px-6 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+                        <span>👉</span> 点此获取密码
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤 2：二维码与说明界面 -->
+            <div id="passwordStep2" class="space-y-5 hidden">
+                <div class="flex justify-center py-2">
+                    <img src="https://gitee.com/da-qiang-classmate/typora/raw/master/image/631b2f126cd24e7588d8fb3ac8137c28.webp" alt="客服微信二维码" class="w-56 h-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md">
+                </div>
+
+                <div class="text-xs text-zinc-400 text-center space-y-2.5 leading-relaxed font-medium">
+                    <p>1. 扫描上方二维码，关注公众号</p>
+                    <p>2. 回复关键词 <span class="text-[#10b981] font-extrabold px-0.5">密码</span></p>
+                    <p>3. 将收到的密码粘贴到下方输入框</p>
+                </div>
+
+                <div class="flex justify-center pt-2">
+                    <button onclick="switchStep(1)" class="flex items-center gap-1.5 px-4 py-2 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-zinc-200 text-xs font-bold rounded-xl transition-all">
+                        <span>←</span> 返回输入密码
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full z-50 glass-nav border-b border-zinc-200/50 dark:border-zinc-800/50 py-3">
+        <div class="max-w-5xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span class="font-bold text-lg tracking-tight italic">Codex <span class="text-brand-500 font-sans">Guide</span></span>
+            </div>
+
+            <div class="hidden md:flex gap-8 text-sm font-medium text-zinc-500">
+                <a href="#env" class="hover:text-brand-500 transition-colors">环境</a>
+                <a href="#install" class="hover:text-brand-500 transition-colors">安装</a>
+                <a href="#login" class="hover:text-brand-500 transition-colors font-bold">登录</a>
+                <a href="#fixes" class="hover:text-brand-500 transition-colors">异常</a>
+                <a href="#learning" class="hover:text-brand-500 transition-colors">教程</a>
+                <a href="#ios-giftcard" class="hover:text-brand-500 transition-colors">礼品卡</a>
+                <a href="#skills" class="hover:text-brand-500 transition-colors">Skill</a>
+                <a href="#cli-tools" class="hover:text-brand-500 transition-colors">CLI</a>
+                <a href="#mcp-tools" class="hover:text-brand-500 transition-colors">MCP</a>
+                <a href="#tools" class="hover:text-brand-500 transition-colors">其他</a>
+            </div>
+
+            <button @click="darkMode = !darkMode" class="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                <svg x-show="darkMode" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-4 px-6 max-w-5xl mx-auto">
+
+        <!-- 1. 环境准备 -->
+        <section id="env" class="mb-16" data-aos="fade-up">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 01</span>
+                <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">环境准备</h2>
+                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 rounded-2xl bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <h3 class="font-bold text-orange-500 mb-2 flex items-center gap-2 italic">科学上网（魔法）</h3>
+                    <p class="text-sm text-zinc-500 mb-6 font-medium">日常打开魔法软件，开启「系统代理」即可。</p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://haha-1366927206.cos.accelerate.myqcloud.com/tutorial/windows/clashverge/Clash.Verge_2.5.0-rc_x64-setup.exe" class="px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-lg hover:bg-brand-700 transition-colors">下载客户端</a>
+                        <a href="https://cokecloud.net/#/register?code=L2FOV7Yb" target="_blank" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-xs font-bold rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">流量购买</a>
+                    </div>
+                </div>
+                <div class="p-6 rounded-2xl bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <h3 class="font-bold text-emerald-500 mb-2 flex items-center gap-2 italic text-sm">Node.js & Git</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                            <code class="text-xs font-mono text-brand-500">winget install OpenJS.NodeJS.LTS</code>
+                            <button onclick="copyText('winget install OpenJS.NodeJS.LTS', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                        <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                            <code class="text-xs font-mono text-brand-500">winget install Git.Git</code>
+                            <button onclick="copyText('winget install Git.Git', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 安装 Codex -->
+        <section id="install" class="mb-16" data-aos="fade-up">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 02</span>
+                <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">安装 Codex</h2>
+                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+            </div>
+            <div class="bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-xl">
+                <div class="flex border-b border-zinc-200 dark:border-zinc-800">
+                    <button @click="activeTab = 'cmd'" :class="activeTab === 'cmd' ? 'bg-zinc-50 dark:bg-zinc-900/50 text-brand-500 border-b-2 border-brand-500 font-bold' : 'text-zinc-400'" class="px-8 py-4 text-xs tracking-widest uppercase transition-all">一键安装</button>
+                    <button @click="activeTab = 'deploy'" :class="activeTab === 'deploy' ? 'bg-zinc-50 dark:bg-zinc-900/50 text-brand-500 border-b-2 border-brand-500 font-bold' : 'text-zinc-400'" class="px-8 py-4 text-xs tracking-widest uppercase transition-all">一键自动部署</button>
+                    <button @click="activeTab = 'offline'" :class="activeTab === 'offline' ? 'bg-zinc-50 dark:bg-zinc-900/50 text-brand-500 border-b-2 border-brand-500 font-bold' : 'text-zinc-400'" class="px-8 py-4 text-xs tracking-widest uppercase transition-all">离线包下载</button>
+                </div>
+                <div class="p-8 italic">
+                    <div x-show="activeTab === 'cmd'" class="space-y-4">
+                        <div class="flex items-center gap-2 text-xs text-amber-500 dark:text-amber-400 font-bold italic">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+                            <span>请以 <span class="text-emerald-500 dark:text-emerald-400">PowerShell (管理员)</span> 身份运行下方命令</span>
+                        </div>
+                        <div class="bg-zinc-950 rounded-xl p-5 relative group border border-zinc-800 inset-shadow">
+                            <code class="text-sm font-mono text-zinc-300">winget install 9plm9xgg6vks</code>
+                            <button onclick="copyText('winget install 9plm9xgg6vks', this)" class="absolute right-4 top-4 p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white opacity-0 group-hover:opacity-100 transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                        <div class="bg-zinc-950 rounded-xl p-5 relative group border border-zinc-800 inset-shadow">
+                            <code class="text-sm font-mono text-zinc-300">winget install --id 9PLM9XGG6VKS --source msstore</code>
+                            <button onclick="copyText('winget install --id 9PLM9XGG6VKS --source msstore', this)" class="absolute right-4 top-4 p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white opacity-0 group-hover:opacity-100 transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                    </div>
+                    <div x-show="activeTab === 'deploy'" class="space-y-4.5 not-italic" x-cloak>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <!-- Windows x64 -->
+                            <a href="https://codexapp.agentsmirror.com/manager/latest/CodexAppManager_x64-setup.exe" class="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-brand-500 hover:shadow-md transform hover:-translate-y-0.5 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.101zM10.95 1.95L24 0v11.55H10.95V1.95zM10.95 12.45H24v11.55l-13.05-1.95v-9.6z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-extrabold text-zinc-700 dark:text-zinc-200 text-xs">Windows · x64</span>
+                                    <span class="text-[10px] text-brand-500 font-extrabold mt-0.5">一键安装器 ↓</span>
+                                </div>
+                            </a>
+
+                            <!-- Windows ARM64 -->
+                            <a href="https://codexapp.agentsmirror.com/manager/latest/CodexAppManager_arm64-setup.exe" class="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-brand-500 hover:shadow-md transform hover:-translate-y-0.5 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.101zM10.95 1.95L24 0v11.55H10.95V1.95zM10.95 12.45H24v11.55l-13.05-1.95v-9.6z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-extrabold text-zinc-700 dark:text-zinc-200 text-xs">Windows · ARM64</span>
+                                    <span class="text-[10px] text-brand-500 font-extrabold mt-0.5">一键安装器 ↓</span>
+                                </div>
+                            </a>
+
+                            <!-- macOS Intel -->
+                            <a href="https://codexapp.agentsmirror.com/manager/latest/CodexAppManager_x86_64.dmg" class="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-brand-500 hover:shadow-md transform hover:-translate-y-0.5 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-zinc-500/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-.1 3.81 1.5a4.67 4.67 0 0 1 3.5 4.13c0 2.62-2.12 5.08-3.4 6.91l.69.72zm-3.26-14c.7-1 1.2-2.4 1-3.7-1.1.1-2.4.8-3.2 1.7-.7.8-1.3 2.2-1 3.5 1.2.1 2.5-.5 3.2-1.5z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-extrabold text-zinc-700 dark:text-zinc-200 text-xs">macOS · Intel</span>
+                                    <span class="text-[10px] text-brand-500 font-extrabold mt-0.5">安装镜像 ↓</span>
+                                </div>
+                            </a>
+
+                            <!-- macOS Apple Silicon -->
+                            <a href="https://codexapp.agentsmirror.com/manager/latest/CodexAppManager_aarch64.dmg" class="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-brand-500 hover:shadow-md transform hover:-translate-y-0.5 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-.1 3.81 1.5a4.67 4.67 0 0 1 3.5 4.13c0 2.62-2.12 5.08-3.4 6.91l.69.72zm-3.26-14c.7-1 1.2-2.4 1-3.7-1.1.1-2.4.8-3.2 1.7-.7.8-1.3 2.2-1 3.5 1.2.1 2.5-.5 3.2-1.5z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-extrabold text-zinc-700 dark:text-zinc-200 text-xs">macOS · Apple Silicon</span>
+                                    <span class="text-[10px] text-brand-500 font-extrabold mt-0.5">M系列芯片 ↓</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-5 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+                            <!-- 左侧：软件来源说明 -->
+                            <div class="flex flex-col justify-center text-xs text-zinc-500 dark:text-zinc-400 space-y-1 leading-relaxed">
+                                <div class="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-zinc-300 text-sm italic">
+                                    <span>》》》 软件来源</span>
+                                </div>
+                                <p class="mt-0.5">
+                                    <a href="https://codexapp.agentsmirror.com/" target="_blank" rel="noopener" class="text-brand-500 font-extrabold hover:underline inline-flex items-center gap-1 text-sm">
+                                        Codex App Manager
+                                        <svg class="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                                    </a>
+                                </p>
+                            </div>
+
+                            <!-- 右侧：Mac 芯片查询命令 -->
+                            <div class="flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-3 border border-zinc-200 dark:border-zinc-800/60 max-w-md h-full">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Mac 芯片版本查询命令</span>
+                                    <code class="text-xs font-mono text-zinc-300 mt-1.5 bg-zinc-100 dark:bg-zinc-900 px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800">uname -m</code>
+                                </div>
+                                <button onclick="copyText('uname -m', this)" class="shrink-0 px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-[10px] font-bold border border-zinc-700 hover:text-white hover:border-zinc-500 transition-colors">复制命令</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="activeTab === 'offline'" class="space-y-6" x-cloak>
+                        <a href="https://github.com/Wangnov/codex-app-mirror/releases/latest" target="_blank" class="inline-block px-6 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-bold text-sm shadow-lg">前往 GitHub 镜像下载最新版本 →</a>
+                        <div class="pt-6 border-t border-zinc-100 dark:border-zinc-800 text-sm">
+                            <p class="text-emerald-500 font-bold mb-2 tracking-tight underline">微软商店地址 (解析用)：</p>
+                            <div class="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 flex items-center justify-between mb-4">
+                                <code class="px-4 text-xs font-mono truncate max-w-xs md:max-w-md">https://apps.microsoft.com/detail/9plm9xgg6vks?hl=zh-CN&gl=CN</code>
+                                <button onclick="copyText('https://apps.microsoft.com/detail/9plm9xgg6vks?hl=zh-CN&gl=CN', this)" class="px-6 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold hover:text-brand-500 transition-all">复制</button>
+                            </div>
+                            <p class="text-zinc-500 text-xs italic">解析工具：<a href="https://store.rg-adguard.net/" target="_blank" class="text-emerald-500 font-bold hover:underline">store.rg-adguard.net</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 登录与指令 -->
+        <section id="login" class="mb-16" data-aos="fade-up">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 03</span>
+                <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">登录与指令配置</h2>
+                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm">
+                    <h3 class="font-bold mb-4 italic text-sm tracking-widest">ChatGPT Login</h3>
+                    <div class="space-y-3">
+                        <div class="flex gap-3">
+                            <div class="flex-1 flex flex-col items-center">
+                                <span class="text-[10px] text-transparent mb-1 select-none">占位</span>
+                                <a href="https://chatgpt.com/" target="_blank" class="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold text-center hover:border-brand-500/50">GPT登录</a>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <span onclick="copyText('Microsoft Authenticator', this)" class="text-[10px] text-zinc-400 cursor-pointer hover:text-brand-500 select-all mb-1">Microsoft Authenticator</span>
+                                <a href="https://chatgpt.com/#settings/Security" target="_blank" class="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold text-center hover:border-brand-500/50">MFA设置 →</a>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="https://kyjl97.github.io/plus/" target="_blank" class="flex items-center justify-center p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold text-center hover:border-brand-500/50 transition-colors">接马🐎 →</a>
+                            <a href="https://www.google.cn/intl/zh-CN/chrome/" target="_blank" class="flex items-center justify-center p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold text-center hover:border-brand-500/50 transition-colors">chrome</a>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-zinc-150 dark:border-zinc-800/80 text-xs bg-zinc-50 dark:bg-zinc-950/40 rounded-xl p-3 border border-zinc-200 dark:border-zinc-800/50 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="shrink-0 w-8 text-[10px] font-bold text-zinc-400 select-none">路径</span>
+                                <code class="flex-1 min-w-0 truncate font-mono text-xs text-brand-500 font-extrabold select-all" title="C:\Program Files\WindowsApps">C:\Program Files\WindowsApps</code>
+                                <button onclick="copyText('C:\\Program Files\\WindowsApps', this)" class="shrink-0 px-2.5 py-1 bg-zinc-800 text-zinc-400 rounded-md text-[10px] font-bold border border-zinc-700 hover:text-white hover:border-zinc-500 transition-colors">复制</button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="shrink-0 w-8 text-[10px] font-bold text-zinc-400 select-none">命令</span>
+                                <code class="flex-1 min-w-0 truncate font-mono text-xs text-emerald-500 font-extrabold select-all" title="shell:appsfolder">shell:appsfolder</code>
+                                <button onclick="copyText('shell:appsfolder', this)" class="shrink-0 px-2.5 py-1 bg-zinc-800 text-zinc-400 rounded-md text-[10px] font-bold border border-zinc-700 hover:text-white hover:border-zinc-500 transition-colors">复制</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm flex flex-col">
+                    <h3 class="font-bold mb-3 italic text-sm tracking-widest">API Key</h3>
+                    <div class="flex flex-wrap gap-2 mb-4 mt-auto">
+                        <a href="https://github.com/lidge-jun/opencodex/blob/main/readme/README.zh-CN.md" target="_blank" class="text-[10px] px-2 py-1 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded border border-brand-500/30 font-bold">OpenCodex</a>
+                        <a href="https://ccswitch.io/zh/download" target="_blank" class="text-[10px] px-2 py-1 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded border border-brand-500/30 font-bold">CC Switch</a>
+                        <a href="https://github.com/BenedictKing/ccx/releases/" target="_blank" class="text-[10px] px-2 py-1 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded border border-brand-500/30 font-bold">CCX</a>
+                    </div>
+                    <div class="space-y-4 my-auto">
+                        <a href="https://opencode.ai/go?ref=9AYD2ZQFJG" target="_blank" class="block text-center py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold shadow-lg hover:opacity-90 transition-all transform hover:-translate-y-0.5">订阅OpenCode Go →</a>
+                        <div class="flex items-stretch gap-3">
+                            <a href="https://platform.agnes-ai.com/settings/apiKeys" target="_blank" class="flex-1 block text-center py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold shadow-lg hover:opacity-90 transition-all transform hover:-translate-y-0.5">获取 Agnes API Key →</a>
+                            <a href="https://github.com/kyjl97" target="_blank" class="shrink-0 flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-md hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all transform hover:-translate-y-0.5">
+                                <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                配置指南
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 配置到软件里的自定义指令 -->
+            <div x-data="{ expanded: false }" class="p-6 md:p-10 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-2xl relative overflow-hidden group">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <h3 class="font-extrabold text-base italic tracking-tight underline decoration-brand-500/30">Codex全局自定义指令 (AAGENTS.md)</h3>
+                    </div>
+                    <button @click="copyText($refs.instructionText.innerText, $el)" class="shrink-0 flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-500 text-white rounded-xl text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-brand-500/25">
+                        复制完整指令
+                    </button>
+                </div>
+
+                <div class="relative bg-zinc-50 dark:bg-zinc-950/50 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800/50">
+                    <div x-ref="instructionText"
+                         :class="expanded ? '' : 'max-h-24 overflow-hidden'"
+                         class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap transition-all duration-500 italic">
+# 全局行为准则
+
+## 语言
+
+- 使用中文回答我的问题，不要使用英文。
+
+## 文件删除安全
+
+- 禁止批量删除文件或目录。
+- 不要使用以下命令：
+  - `del /s`
+  - `rd /s`
+  - `rmdir /s`
+  - `Remove-Item -Recurse`
+  - `rm -rf`
+- 需要删除文件时，只能一次删除一个明确路径的文件。
+- 正确示例：
+
+```powershell
+Remove-Item "C:\path\to\file.txt"
+```
+
+- 如果需要批量删除文件，应停止操作，并向用户请求，让用户手动删除。
+
+## 编码前先想清楚
+
+不要假设，不要掩饰不确定性，要主动说清楚取舍。
+
+把自己当作按返工收费的承包商：错误假设造成的返工成本由自己承担；不必要的问题成本则由用户承担。先尽量调查，只有真正阻塞时才提问。
+
+- 实现前先明确假设。
+- 如果需求有多种理解，不要静默选择，要说明可能的解释。
+- 如果存在更简单的方案，要主动提出。
+- 如果发现需求不清楚，应停下来说明困惑点，并询问用户。
+
+### 先调查，再提问
+
+- 先阅读相关代码、测试、配置和依赖清单。
+- 一分钟内可以通过搜索发现的信息属于自己的研究，不要转嫁成问题。
+- 不要询问仓库里已经存在的测试框架、语言版本、Lint 规则、错误处理约定、目录结构或抽象方式。
+
+### 先输出，再暂停
+
+开始实现前，按以下顺序输出：
+
+- **目标。** 用一段话复述需求，并写明自己会遵守的验收标准；如果复述错了，应在最便宜的阶段暴露。
+- **阻塞问题（0—3 个）。** 只有答案错误会导致返工或丢弃已完成工作时才提问。每个问题都给出推荐默认值，让用户可以直接回复“按建议执行”。没有真正阻塞时，明确写“无（0 个）”。
+- **假设。** 必须编号、具体、可证伪，而不是“代码应易维护”这类空话。例如“输入不超过 1 万行且可以放入内存”就是合格假设。按任务涉及范围覆盖：
+  - 数据：形状、规模、可信度、编码，以及畸形输入的表现；
+  - 失败：超时、部分写入、下游返回 500 时，是重试、直接报错还是降级；
+  - 边界：调用方、公开 API 与内部实现、向后兼容义务；
+  - 状态：并发、幂等、事务性和顺序保证；
+  - 环境：运行时版本、部署位置和允许访问的范围；
+  - 范围：明确不做什么，以及哪些事项保留为 TODO；
+  - 测试：会编写和验证什么，以及暂不覆盖什么。
+- **计划。** 列出要新建或修改的文件、关键函数/类型签名和工作顺序。若在多个方案中做了选择，写出被拒绝的替代方案及一句话原因。
+
+完成上述输出后等待批准，不要直接开始实现。
+
+## 简单优先
+
+用能解决问题的最小代码，不做猜测式扩展。
+
+- 不添加用户没有要求的功能。
+- 不为一次性代码创建抽象。
+- 不加入未经要求的灵活性、配置项或扩展点。
+- 无需为不可能发生的场景写复杂错误处理。
+- 如果写了 200 行但 50 行就能解决，应主动简化。
+
+自检问题：资深工程师会不会觉得这太复杂？如果会，就简化。
+
+## 按影响范围控制流程深度
+
+流程要与改动的爆炸半径匹配：
+
+- 拼写修复、重命名，或少于约 20 行且只有一种明显正确写法的改动：直接完成并验证。
+- 新模块、数据结构（Schema）变更，以及涉及认证、金钱、迁移或删除的改动：完整执行调查、假设、计划和批准流程，并比平时更严格地检查自己的假设。
+
+## 外科手术式修改
+
+只改必须改的地方，只清理自己造成的问题。
+
+- 不顺手“优化”相邻代码、注释或格式。
+- 不重构没有坏掉的代码。
+- 匹配项目既有风格，即使自己会用不同写法。
+- 发现无关的死代码时，只说明，不主动删除。
+- 如果自己的改动造成了未使用的导入、变量或函数，要清理掉。
+- 不删除改动前就已经存在的死代码，除非用户明确要求。
+
+判断标准：每一行改动都应能直接追溯到用户的请求。
+
+## 目标驱动执行
+
+把任务转成可以验证的目标，并循环直到验证完成。
+
+- “添加校验”应转成：为非法输入写测试，然后让测试通过。
+- “修复 bug”应转成：写一个能复现问题的测试，然后让测试通过。
+- “重构某模块”应转成：重构前后都确认测试通过。
+
+对于多步骤任务，先给出简短计划：
+
+```text
+1. [步骤] -> 验证：[检查方式]
+2. [步骤] -> 验证：[检查方式]
+3. [步骤] -> 验证：[检查方式]
+```
+
+好的成功标准应允许独立推进；模糊目标，例如“让它能用”，需要先澄清。
+
+## 获批后执行
+
+- 只按已批准的计划实现。
+- 如果实现过程中发现假设错误，或计划与实际代码不一致，应立即停下并说明；不要悄悄改用另一种设计，也不要继续推进自己已经认为不可靠的方案。
+
+## 回应态度与独立思考
+
+- 不要默认认同我的观点，也不要为了让我满意而附和我。
+- 回答前，先检查我的问题里是否存在错误前提、逻辑跳跃、信息缺失或未经证实的判断。如果有，请直接指出，不要沿着错误前提继续推导。
+- 明确区分：已确认的事实、合理推测、个人观点和暂时无法验证的信息。涉及事实、数字、人物、日期、引用和案例时，尽可能核对来源；无法确认就直接说明，不要编造。
+- 当你不同意我的判断时，请清楚说明原因，并给出反例、风险或更合理的解释。不要只给结论，要说明推理过程。
+- 语气可以直接，但不要刻意尖刻、说教或卖弄。比起让我感觉良好，更重要的是帮助我发现自己忽略的问题。
+
+## 部署启动“独立审核线程”
+当我说‘deploy’时，完成测试、提交并推送此任务的更改。然后使用 gpt-5.6-luna 创建一个新的 Codex 项目任务，启用最大推理来审查并合并 PR，监控 exact-main CI 和自动部署，并验证生产环境。按照该任务完成并在此处报告结果。防止递归移交。
+遇到需要批量执行的子任务，自己spawn独立的Luna Max对话线程去跑，跑完把结果汇总回来。
+</div>
+<!-- 渐变蒙层 -->
+<div x-show="!expanded" class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-zinc-50 dark:from-zinc-950/80 to-transparent pointer-events-none rounded-b-2xl"></div>
+</div><button @click="expanded = !expanded" class="mt-6 mx-auto flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-zinc-400 hover:text-brand-500 transition-all">
+                <span x-text="expanded ? '折叠内容' : '查看完整指令内容'"></span>
+                <svg :class="expanded ? 'rotate-180' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- 4. 报错修复 -->
+    <section id="fixes" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 04</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">报错修复</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- 启动崩溃 -->
+            <div class="p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm">
+                <h3 class="font-bold mb-4 italic text-sm tracking-widest text-orange-500">1. 启动时崩溃</h3>
+                <p class="text-xs text-zinc-500 mb-6 font-medium">通常是因为网络代理软件（如 ASProxy）修改了系统的 Winsock 目录配置。</p>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">排查命令</p>
+                        <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                            <code class="text-xs font-mono text-brand-500">netsh winsock show catalog | findstr ASProxy</code>
+                            <button onclick="copyText('netsh winsock show catalog | findstr ASProxy', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">重置命令 (管理员权限)</p>
+                        <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                            <code class="text-xs font-mono text-brand-500">netsh winsock reset</code>
+                            <button onclick="copyText('netsh winsock reset', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                        <p class="text-[10px] text-zinc-500 mt-2 italic">*注：执行完成后通常需要重启电脑生效。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 登录失败 -->
+            <div class="p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm flex flex-col">
+                <h3 class="font-bold mb-4 italic text-sm tracking-widest text-emerald-500">2. 登录失败或重连5次</h3>
+                <p class="text-xs text-zinc-500 mb-6 font-medium">多半是因为网络或代理环境无法正常连通 OpenAI 认证接口。</p>
+                <div class="mb-6">
+                    <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">诊断连通性命令</p>
+                    <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                        <code class="text-xs font-mono text-brand-500">curl -I https://auth.openai.com</code>
+                        <button onclick="copyText('curl -I https://auth.openai.com', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                    </div>
+                </div>
+                <div class="mt-auto space-y-4">
+                    <div>
+                        <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">修复方案</p>
+                        <a href="https://lz.qaiu.top/parser?url=https://wwbxq.lanzouq.com/iILcv3tj3web" target="_blank" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all group">
+                            <svg class="w-4 h-4 fill-none stroke-current stroke-2 shrink-0 group-hover:animate-bounce" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            下载配置环境变量脚本 →
+                        </a>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">手动配置环境变量</p>
+                        <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow">
+                            <code class="text-xs font-mono text-brand-500">rundll32 sysdm.cpl,EditEnvironmentVariables</code>
+                            <button onclick="copyText('rundll32 sysdm.cpl,EditEnvironmentVariables', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                        </div>
+                        <p class="text-[10px] text-zinc-500 mt-1.5 italic">↑ 打开环境变量快捷（Win+R → 输入命令回车）</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Windows 设置未完成 -->
+            <div class="p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm">
+                <h3 class="font-bold mb-4 italic text-sm tracking-widest text-rose-500">3. Windows 设置未完成</h3>
+                <p class="text-xs text-zinc-500 mb-3 font-medium">首次启动 Codex 时卡在「Windows 设置未完成」阶段，可使用下方一键脚本自动修复。</p>
+                <div class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800 inset-shadow mb-6">
+                    <code class="text-xs font-mono text-brand-500">%USERPROFILE%\.codex</code>
+                    <button onclick="copyText('%USERPROFILE%\\.codex', this)" class="text-zinc-400 hover:text-brand-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></button>
+                </div>
+                <p class="text-[10px] text-zinc-500 -mt-4 mb-6 italic">↑ Codex 配置目录路径</p>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-[10px] font-bold mb-2 text-zinc-400 uppercase tracking-wider">解决方法</p>
+                        <a href="https://lz.qaiu.top/parser?url=https://wwbxq.lanzouq.com/i3TqM3zy3luh" target="_blank" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all group">
+                            <svg class="w-4 h-4 fill-none stroke-current stroke-2 shrink-0 group-hover:animate-bounce" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            一键处理脚本 · 点此下载 →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. 学习指南 -->
+    <section id="learning" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 05</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">Codex 学习指南</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <a href="https://codex.bozhouai.com/#toc" target="_blank" class="flex flex-col p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm hover:border-brand-500 hover:shadow-lg transition-all group">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <h3 class="font-bold italic tracking-widest group-hover:text-brand-500 transition-colors">ChatGPT 橙皮书</h3>
+                </div>
+                <p class="text-xs text-zinc-500 mb-4 flex-1">全面、系统化的 ChatGPT 与 AI 提示词学习指南，助你掌握底层逻辑。</p>
+                <div class="text-[10px] font-bold text-brand-500 uppercase flex items-center gap-1">开始阅读 <svg class="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></div>
+            </a>
+
+            <a href="https://x.com/huoshan007/status/2081307788479782919" target="_blank" class="flex flex-col p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm hover:border-brand-500 hover:shadow-lg transition-all group">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                    </div>
+                    <h3 class="font-bold italic tracking-widest group-hover:text-brand-500 transition-colors">Codex 保姆级视频教程！</h3>
+                </div>
+                <p class="text-xs text-zinc-500 mb-4 flex-1">从零基础上手到高阶使用的实战视频讲解，轻松搞定日常操作。</p>
+                <div class="text-[10px] font-bold text-brand-500 uppercase flex items-center gap-1">观看教程 <svg class="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></div>
+            </a>
+            <a href="https://mp.weixin.qq.com/s/F3HS6BUfTDP0h3rFipoJhA" target="_blank" class="flex flex-col p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card shadow-sm hover:border-brand-500 hover:shadow-lg transition-all group relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                <div class="flex items-center gap-3 mb-4 relative z-10">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <h3 class="font-bold italic tracking-widest group-hover:text-brand-500 transition-colors">Codex 实战手册</h3>
+                </div>
+                <p class="text-xs text-zinc-500 mb-4 flex-1 relative z-10"><span class="text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-1 py-0.5 rounded">得救之道出品，仅售128元</span><br/><span class="inline-block mt-2">2小时快速上手，少走30天弯路。</span></p>
+                <div class="text-[10px] font-bold text-brand-500 uppercase flex items-center gap-1 relative z-10">查看详情 <svg class="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></div>
+            </a>
+        </div>
+    </section>
+
+    <!-- 6. IOS礼品卡订阅GPT -->
+    <section id="ios-giftcard" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8 mt-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 06</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">IOS礼品卡订阅GPT</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="https://www.apple.com/shop/buy-giftcard/giftcard" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">苹果官网</h4>
+                <p class="text-[10px] text-zinc-400">Apple官方礼品卡购买渠道</p>
+            </a>
+            <a href="https://www.mtcgame.com/zh/apple-store/itunes-hediye-karti" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">mtcgame</h4>
+                <p class="text-[10px] text-zinc-400">最推荐，支持土耳其、印尼等20多国</p>
+            </a>
+            <a href="https://www.seagm.com/zh-sg/itunes-gift-card-turkey?ps=Home-Popular-Game-Card" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">Seagm</h4>
+                <p class="text-[10px] text-zinc-400">支持支付宝，需关梯子，小额试用</p>
+            </a>
+            <a href="https://www.oyunfor.com/apple-store/apple-store-itunes-gift-card#googtrans(tr%7Cen)" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">oyunfor</h4>
+                <p class="text-[10px] text-zinc-400">含2%-3%手续费，按发卡行汇率算</p>
+            </a>
+            <a href="https://shop.pockyt.io/pc/brands/all" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">PockytShop</h4>
+                <p class="text-[10px] text-zinc-400">支持支付宝网页端及小程序付款</p>
+            </a>
+            <a href="https://x.com/0xJason/status/2052016477897691578" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">币安礼品卡教程</h4>
+                <p class="text-[10px] text-zinc-400">币安礼品卡购买图文教程</p>
+            </a>
+            <a href="https://mp.weixin.qq.com/s/EoGG5929k7WEjJGLfn8R3A" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">美区充值攻略</h4>
+                <p class="text-[10px] text-zinc-400">支付宝买App Store美区礼品卡</p>
+            </a>
+            <a href="https://x.com/0xJoveXu/status/2053835201885978767?s=20" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">土区PLUS兑换</h4>
+                <p class="text-[10px] text-zinc-400">GPT土耳其区PLUS兑换教程</p>
+            </a>
+        </div>
+    </section>
+
+            <!-- 7. Skill 推荐 -->
+    <section id="skills" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8 mt-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 07</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">Skill 推荐</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+            <!-- yao-meta-skill -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">yao-meta-skill</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">用于完整创建 Agent Skill 的元技能</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/yaojingang/yao-meta-skill</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/yaojingang/yao-meta-skill', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- qiaomu-download -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">qiaomu-download</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">乔木下载器 · 一键抓取网页/视频/音频/图片资源</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/joeseesun/qiaomu-download</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/joeseesun/qiaomu-download', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- browser skill -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">browser skill</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">浏览器自动化</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/Tencent/BrowserSkill</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/Tencent/BrowserSkill', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- dashiAI-ppt-skill -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">dashiAI-ppt-skill</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">让AI帮你做PPT</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/chuspeeism/dashiAI-ppt-skill</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/chuspeeism/dashiAI-ppt-skill', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- web-access -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">web-access</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-3 font-bold">给 AI Agent 装上完整联网能力的 Skill</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/eze-is/web-access</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/eze-is/web-access', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- Agent-reach -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">Agent-reach</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">给你的 AI Agent 一键装上互联网能力</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/Panniantong/Agent-Reach</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/Panniantong/Agent-Reach', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- notebooklm-py -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">notebooklm-py</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">NotebookLM 的 Python 客户端实现</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/teng-lin/notebooklm-py</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/teng-lin/notebooklm-py', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- 知识星球Skill -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">知识星球Skill</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">让 AI 成为你在知识星球的超级助理</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/unnoo/zsxq-skill</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/unnoo/zsxq-skill', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- 8. CLI 工具推荐 -->
+    <section id="cli-tools" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8 mt-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 08</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">CLI 工具推荐</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+            <!-- GitHub CLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">GitHub CLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">让 AI 全权操控你的 GitHub 仓库</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://docs.github.com/en/github-cli/github-cli/quickstart#about-github-cli</code>
+                    <button onclick="copyText('帮我安装\nhttps://docs.github.com/en/github-cli/github-cli/quickstart#about-github-cli', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- Office CLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">Office CLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">让 AI 帮你自动化处理 Office 文档</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://x.com/manateelazycat/status/2054427205317616086?s=20</code>
+                    <button onclick="copyText('帮我安装\nhttps://x.com/manateelazycat/status/2054427205317616086?s=20', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+<!-- 即刻 CLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">即刻 CLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">命令行操作即刻 (Jike)</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/doublewater777/jike-web-cli</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/doublewater777/jike-web-cli', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- 飞书 CLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">飞书 CLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">飞书开放平台命令行工具</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/larksuite/cli</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/larksuite/cli', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- OpenCLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">OpenCLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">把任意需要登录的网站直接转化为 CLI 工具</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/jackwener/OpenCLI</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/jackwener/OpenCLI', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- Obsidian CLI -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">Obsidian CLI</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">命令行直接操作你的 Obsidian 知识库笔记</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/Yakitrak/obsidian-cli</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/Yakitrak/obsidian-cli', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. MCP 工具推荐 -->
+    <section id="mcp-tools" class="mb-16" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8 mt-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 09</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">MCP 工具推荐</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+            <!-- DrawMCP -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">DrawMCP</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-3 font-bold">AI 自动绘制架构图</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/jgraph/drawio-mcp</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/jgraph/drawio-mcp', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- 滴答清单MCP -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">滴答清单 MCP</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-3 font-bold">AI 自动管理你的待办事项</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://help.dida365.com/articles/7438132116019216384</code>
+                    <button onclick="copyText('帮我安装\nhttps://help.dida365.com/articles/7438132116019216384', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- Playwright MCP -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">Playwright MCP</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">赋予 AI 完整的无头浏览器抓取与点击能力</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/microsoft/playwright-mcp</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/microsoft/playwright-mcp', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+
+            <!-- Context7 -->
+            <div class="flex flex-col h-full bg-white dark:bg-dark-card border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm hover:border-brand-500 transition-all group">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-500"></div>
+                    <h3 class="font-bold text-lg italic text-zinc-800 dark:text-zinc-200">Context7</h3>
+                </div>
+                <p class="text-sm text-zinc-500 mb-5">为 AI 实时提供最新的官方库与框架开发文档</p>
+                <div class="bg-zinc-950 mt-auto rounded-xl p-4 flex items-center justify-between group border border-zinc-800 inset-shadow">
+                    <code class="text-xs font-mono text-zinc-300 whitespace-pre-wrap break-all">帮我安装
+https://github.com/upstash/context7</code>
+                    <button onclick="copyText('帮我安装\nhttps://github.com/upstash/context7', this)" class="shrink-0 ml-4 px-4 py-2 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-zinc-700 hover:border-brand-500">复制</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- 10. 辅助工具 -->
+    <section id="tools" class="mb-4" data-aos="fade-up">
+        <div class="flex items-center gap-4 mb-8">
+            <span class="text-brand-500 font-mono text-sm uppercase tracking-widest">Phase 10</span>
+            <h2 class="text-2xl font-bold italic underline decoration-brand-500/30">其他工具推荐</h2>
+            <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="https://github.akams.cn/" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">GitHub 加速</h4>
+                <p class="text-[10px] text-zinc-400">稳定解决海外下载问题</p>
+            </a>
+            <a href="https://www.codebuddy.cn/events/invite?inviteCode=uhc35nnbtssnk" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic ">WorkBuddy</h4>
+                <p class="text-[10px] text-zinc-400">国产Agent软件</p>
+            </a>
+            <a href="https://github.com/xqnode/codex-zh-CN" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic ">Codex汉化工具</h4>
+                <p class="text-[10px] text-zinc-400">界面补丁汉化包说明</p>
+            </a>
+            <a href="https://kyjl97.github.io/key" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">密钥生成</h4>
+                <p class="text-[10px] text-zinc-400">安全访问秘匙一键生成</p>
+            </a>
+            <a href="https://lz.qaiu.top/parser?url=https://wwzq.lanzouq.com/iNZOo320ywyb" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">Win11 菜单</h4>
+                <p class="text-[10px] text-zinc-400">win11右键菜单优化</p>
+            </a>
+            <a href="https://lz.qaiu.top/parser?url=https://wwzq.lanzouq.com/iLHZK371f3kf" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">HiBit 卸载</h4>
+                <p class="text-[10px] text-zinc-400">HiBit无残留卸载</p>
+            </a>
+            <a href="https://account.apple.com/account" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">苹果账号</h4>
+                <p class="text-[10px] text-zinc-400">Apple ID注册地址</p>
+            </a>
+            <a href="https://www.meiguodizhi.com/usa-address/montana" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">美国地址</h4>
+                <p class="text-[10px] text-zinc-400">蒙大拿州免税(订阅≤20🔪)</p>
+            </a>
+            <a href="https://www.internetdownloadmanager.com/" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">IDM 下载工具</h4>
+                <p class="text-[10px] text-zinc-400">IDM下载工具</p>
+            </a>
+            <a href="https://mirror2.internetdownloadmanager.com/download/idman643build7.exe" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">IDM 鸡活工具</h4>
+                <p class="text-[10px] text-zinc-400">IDM鸡活工具</p>
+            </a>
+            <a href="https://adguard.com/zh_cn/adguard-windows/overview.html" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic ">AdGuard插件</h4>
+                <p class="text-[10px] text-zinc-400">AdGuard插件</p>
+            </a>
+            <a href="https://chromewebstore.google.com/detail/shoteasy-light-and-easy-t/nmppkehciohcgcehlnifgeokgioidknh" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic ">ShotEasy截图</h4>
+                <p class="text-[10px] text-zinc-400">ShotEasy截图插件</p>
+            </a>
+            <a href="https://checkcc.org/" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">Claude 网络监测</h4>
+                <p class="text-[10px] text-zinc-400">Claude 网络环境监测</p>
+            </a>
+            <a href="https://ip.net.coffee/gpt/" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">ChatGPT 网络监测</h4>
+                <p class="text-[10px] text-zinc-400">ChatGPT 网络环境监测</p>
+            </a>
+            <a href="https://www.micuapi.ai/register?aff=uTGd" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">米醋 API</h4>
+                <p class="text-[10px] text-zinc-400">米醋API中转站</p>
+            </a>
+            <a href="https://apimart.ai/register?aff=QVui" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">APIMART</h4>
+                <p class="text-[10px] text-zinc-400">APIMART中转站</p>
+            </a>
+            <a href="https://appstoreprice.org/zh/apps/6448311069" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">iOS 订阅价格</h4>
+                <p class="text-[10px] text-zinc-400">苹果App Store订阅监测</p>
+            </a>
+            <a href="https://priceradar.store/zh/app/0a4e8225-2687-46fd-8533-103e44c81b0a" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">安卓 订阅价格</h4>
+                <p class="text-[10px] text-zinc-400">Google Play订阅监测</p>
+            </a>
+            <a href="https://arena.ai/leaderboard/code/webdev" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">LLM 测评榜单</h4>
+                <p class="text-[10px] text-zinc-400">大模型投票测评榜单</p>
+            </a>
+            <a href="https://www.amz123.com/tools-hlhs" target="_blank" class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-dark-card hover:border-brand-500 transition-all group">
+                <h4 class="font-bold text-xs mb-1 group-hover:text-brand-500 italic uppercase">汇率换算</h4>
+                <p class="text-[10px] text-zinc-400">汇率换算器</p>
+            </a>
+        </div>
+    </section>
+        </main>
+
+<!-- 页脚 -->
+<footer class="border-t border-zinc-200 dark:border-zinc-800 py-16">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10">
+        <!-- 左侧 -->
+        <div class="text-center md:text-left">
+            <p class="text-xl font-extrabold italic tracking-tight">得救之道 <span class="text-brand-500">© 2026</span></p>
+            <p class="text-[10px] text-zinc-500 mt-2 uppercase tracking-[0.2em] font-mono">Copyright All Rights Reserved.</p>
+        </div>
+
+        <!-- 右侧图标 (纯 SVG 官方 Logo) -->
+        <div class="flex gap-6 items-center">
+                        <!-- Terminal 命令行 -->
+            <a href="https://kyjl97.github.io/cmd/" target="_blank" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all transform hover:scale-110" title="Web Terminal">
+                <svg class="w-6 h-6 fill-none stroke-current" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            </a>
+            <!-- GitHub 官方 Logo -->
+            <a href="https://github.com/kyjl97" target="_blank" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all transform hover:scale-110">
+                <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+            <!-- X (Twitter) 官方新版 Logo -->
+            <a href="https://github.com/kyjl97" target="_blank" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all transform hover:scale-110">
+                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    AOS.init({ duration: 800, once: true });
+
+    function copyText(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '已复制 ✓';
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+            }, 2000);
+        });
+    }
+
+    // 屏蔽右键和常用开发人员调试快捷键
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+            e.preventDefault();
+        }
+    });
+
+    (function() {
+        const overlay = document.getElementById('passwordOverlay');
+        const input = document.getElementById('passwordInput');
+        const step1 = document.getElementById('passwordStep1');
+        const step2 = document.getElementById('passwordStep2');
+        if (localStorage.getItem('codex_guide_auth') !== 'true') {
+            overlay.classList.remove('hidden');
+        }
+        window.switchStep = function(step) {
+            if (step === 1) {
+                step1.classList.remove('hidden');
+                step2.classList.add('hidden');
+                setTimeout(() => input.focus(), 50);
+            } else if (step === 2) {
+                step1.classList.add('hidden');
+                step2.classList.remove('hidden');
+            }
+        };
+
+        // 异步计算 SHA-256 哈希值
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        window.verifyPassword = async function() {
+            const val = input.value.trim().toLowerCase();
+            if (!val) return;
+
+            const hashedVal = await sha256(val);
+            const allowedHashes = [
+                '2747b7c718564ba5f066f0523b03e17f6a496b06851333d2d59ab6d863225848', // 128
+                '2201ba6e967dfc0b08e0ee4fbed62ee44c31fe1ab4cc89632d7c51b576109b89', // kyjl97
+                '7792ffb069a08fda8e288738759b94588d25e0db0f0fcf9d44093f5708d565f0', // kyjl97
+                '57de4cf40144bdf7d00010f2f5557a7d642c2b9705309bfade167dd313e2ca93'  // codex
+            ];
+
+            if (allowedHashes.includes(hashedVal)) {
+                localStorage.setItem('codex_guide_auth', 'true');
+                overlay.classList.add('hidden');
+            } else {
+                alert('密码错误，请重新输入或扫描二维码获取密码。');
+                input.value = '';
+                input.focus();
+            }
+        };
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+    })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
